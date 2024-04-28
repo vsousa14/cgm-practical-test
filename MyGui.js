@@ -1,6 +1,6 @@
 // MyGui.js
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import { Box, Shelf } from './Models.js';
+import { Box, Shelf, Warehouse } from './Models.js';
 import * as THREE from 'three';
 
 export class MyGui {
@@ -18,6 +18,7 @@ export class MyGui {
       activeControls: null, // Variável para controlar qual conjunto de controles está ativo
       drawBox: () => this.drawBox(),
       drawShelf: () => this.drawShelf(),
+      drawWarehouse: () => this.drawWarehouse(),
       cleanScene: () => this.cleanScene(),
       switchCamera: () => this.switchCamera(),
       toggleTrackballControls: this.webgl.trackballControls.enabled,
@@ -60,6 +61,7 @@ export class MyGui {
 
     gui.add(guiVars, 'drawBox').name('Draw Box');
     gui.add(guiVars, 'drawShelf').name('Draw Shelf');
+    gui.add(guiVars, 'drawWarehouse').name('Draw Warehouse');
     gui.add(guiVars, 'cleanScene').name('Clean Scene');
     gui.add(guiVars, 'switchCamera').name('Switch Camera');
     gui.add(this, 'cameraTypeText').name('Camera Type').listen();
@@ -82,6 +84,13 @@ export class MyGui {
     this.cleanScene();
     const shelf = new Shelf(200, 150, 200, 5);
     this.webgl.scene.add(shelf);
+    this.webgl.scene.add(new THREE.AxesHelper(50));
+  }
+
+  drawWarehouse() {
+    this.cleanScene();
+    const warehouse = new Warehouse(2000, 150, 2000, 5);
+    this.webgl.scene.add(warehouse);
     this.webgl.scene.add(new THREE.AxesHelper(50));
   }
 

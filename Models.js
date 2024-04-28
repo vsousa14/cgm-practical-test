@@ -64,3 +64,22 @@ export class Shelf extends THREE.Object3D{
     return panel;
   }
 }
+
+export class Warehouse extends THREE.Object3D{
+  constructor(width,height,depth,thickness){
+    super()
+
+    //floor
+    const floor = this.createWarehouse(width*2, thickness, depth, 0, -height / 2 + thickness / 2, 0);
+    this.add(floor);
+
+  }
+
+  createWarehouse(width,height,depth,posX,posY,posZ){
+    const geometry = new THREE.BoxGeometry(width,height,depth);
+    const material = new THREE.MeshNormalMaterial({side: THREE.DoubleSide});
+    const panel = new THREE.Mesh(geometry, material);
+    panel.position.set(posX,posY,posZ);
+    return panel;
+  }
+}
