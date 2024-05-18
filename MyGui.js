@@ -1,68 +1,90 @@
 // MyGui.js
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import { Box, Shelf, Warehouse } from './Models.js';
+import { Box, Shelf, Warehouse, Robot } from './Models.js';
 import * as THREE from 'three';
 
 export class MyGui {
   constructor(webgl) {
     this.webgl = webgl;
-    this.cameraTypeText = 'Perspective';
-    this.orbitControlsAutoRotateEnabled = true;
-    this.guiVars = {
-      activeControls: null, // Variável para controlar qual conjunto de controles está ativo
-      drawBox: () => this.drawBox(),
-      drawShelf: () => this.drawShelf(),
-      drawWarehouse: () => this.drawWarehouse(),
-      cleanScene: () => this.cleanScene(),
-      switchCamera: () => this.switchCamera(),
-      toggleTrackballControls: false,
-      toggleOrbitControlsAutoRotate: false,
-      toggleFirstPersonControls: false,
-      toggleFlyControls: false,
-    };
+    this.activeControl = null;
+    this.cameraTypeText = '';
+
     const gui = new GUI();
     this.setupGui(gui);
   }
 
   setupGui(gui) {
-    gui.add(this.guiVars, 'toggleTrackballControls').name('Trackball Controls').onChange(value => {
+    const guiVars = {
+      drawBox: () => this.drawBox(),
+      drawEstante: () => this.drawEstante(),
+      drawWarehouse: () => this.drawWarehouse(),
+      drawRobot: () => this.drawRobot(),
+      animateRobot: () => this.animateRobot(),
+      cleanScene: () => this.cleanScene(),
+      switchCamera: () => this.switchCamera(),
+      trackballControls: false,
+      orbitControls: false,
+      firstPersonControls: false,
+      flyControls: false,
+    };
+
+    const activateControl = (controlName) => {
+      if (this.activeControl !== controlName) {
+        if (this.activeControl) {
+          this.deactivateControl(this.activeControl);
+        }
+        this.activeControl = controlName;
+        this.webgl.setupControl(controlName);
+      }
+    };
+
+    gui.add(guiVars, 'trackballControls').name('Trackball Controls').onChange(value => {
       if (value) {
-        this.guiVars.activeControls = 'trackball';
-        this.activateControls('trackball');
+        activateControl('trackballControls');
       } else {
-        this.deactivateControls('trackball');
+        this.deactivateControl('trackballControls');
       }
     });
 
-    gui.add(this.guiVars, 'toggleOrbitControlsAutoRotate').name('Orbit Auto Rotate').onChange(value => {
-      this.orbitControlsAutoRotateEnabled = value;
-      this.webgl.setOrbitControlsAutoRotate(value);
-    });
-
-    gui.add(this.guiVars, 'toggleFirstPersonControls').name('First Person Controls').onChange(value => {
+    gui.add(guiVars, 'orbitControls').name('Orbit Auto Rotate').onChange(value => {
       if (value) {
-        this.guiVars.activeControls = 'firstPerson';
-        this.activateControls('firstPerson');
+        activateControl('orbitControls');
       } else {
-        this.deactivateControls('firstPerson');
+        this.deactivateControl('orbitControls');
       }
     });
 
-    gui.add(this.guiVars, 'toggleFlyControls').name('Fly Controls').onChange(value => {
+    gui.add(guiVars, 'firstPersonControls').name('First Person Controls').onChange(value => {
       if (value) {
-        this.guiVars.activeControls = 'fly';
-        this.activateControls('fly');
+        activateControl('firstPersonControls');
       } else {
-        this.deactivateControls('fly');
+        this.deactivateControl('firstPersonControls');
       }
     });
 
-    gui.add(this.guiVars, 'drawBox').name('Draw Box');
-    gui.add(this.guiVars, 'drawShelf').name('Draw Shelf');
-    gui.add(this.guiVars, 'drawWarehouse').name('Draw Warehouse');
-    gui.add(this.guiVars, 'cleanScene').name('Clean Scene');
-    gui.add(this.guiVars, 'switchCamera').name('Switch Camera');
+    gui.add(guiVars, 'flyControls').name('Fly Controls').onChange(value => {
+      if (value) {
+        activateControl('flyControls');
+      } else {
+        this.deactivateControl('flyControls');
+      }
+    });
+
+    gui.add(guiVars, 'drawBox').name('Draw Box');
+    gui.add(guiVars, 'drawEstante').name('Draw Estante');
+    gui.add(guiVars, 'drawWarehouse').name('Draw Warehouse');
+    gui.add(guiVars, 'drawRobot').name('Draw Robot');
+    gui.add(guiVars, 'animateRobot').name('Animate Robot');
+    gui.add(guiVars, 'cleanScene').name('Clean Scene');
+    gui.add(guiVars, 'switchCamera').name('Switch Camera');
     gui.add(this, 'cameraTypeText').name('Camera Type').listen();
+  }
+
+  deactivateControl(controlName) {
+    if (this.activeControl === controlName) {
+      this.webgl.disposeControl(controlName);
+      this.activeControl = null;
+    }
   }
 
   cleanScene() {
@@ -73,15 +95,15 @@ export class MyGui {
 
   drawBox() {
     this.cleanScene();
-    const box = new Box(200, 150, 200, 5);
+    const box = new Box(600, 500, 600, 30);
     this.webgl.scene.add(box);
     this.webgl.scene.add(new THREE.AxesHelper(50));
   }
 
-  drawShelf() {
+  drawEstante() {
     this.cleanScene();
-    const shelf = new Shelf(200, 150, 200, 5);
-    this.webgl.scene.add(shelf);
+    const estante = new Shelf(200, 150, 200, 5);
+    this.webgl.scene.add(estante);
     this.webgl.scene.add(new THREE.AxesHelper(50));
   }
 
@@ -89,7 +111,53 @@ export class MyGui {
     this.cleanScene();
     const warehouse = new Warehouse(2000, 150, 2000, 5);
     this.webgl.scene.add(warehouse);
-    this.webgl.scene.add(new THREE.AxesHelper(50));
+  }
+
+  drawRobot() {
+    this.cleanScene();
+    const robot = new Robot(200, 300, 200);
+    this.webgl.scene.add(robot);
+  }
+
+  animateRobot() {
+    console.log(this.webgl.scene.children.map(child => child.name));
+    const robot = this.webgl.scene.getObjectByName('robot'); // Supondo que o robô tenha um nome na cena
+    if (robot) {
+      console.log("robot Existe: ", robot);
+      // Define a posição inicial do robô
+      const initialPosition = { x: robot.position.x };
+  
+      // Define a posição final para onde o robô andará para a frente
+      const forwardEndPosition = { x: robot.position.x + 200 };
+  
+      // Define a posição final para onde o robô voltará
+      const backwardEndPosition = { x: robot.position.x - 200 };
+  
+      // Cria uma animação Tween para o movimento para frente
+      const forwardTween = new TWEEN.Tween(initialPosition)
+        .to(forwardEndPosition, 2000) // Duração da animação para frente (em milissegundos)
+        .easing(TWEEN.Easing.Linear.None)
+        .onUpdate(() => {
+          robot.position.x = initialPosition.x;
+        });
+  
+      // Cria uma animação Tween para o movimento para trás
+      const backwardTween = new TWEEN.Tween(initialPosition)
+        .to(backwardEndPosition, 2000) // Duração da animação para trás (em milissegundos)
+        .easing(TWEEN.Easing.Linear.None)
+        .onUpdate(() => {
+          robot.position.x = initialPosition.x;
+        });
+  
+      // Encadeia as animações para formar um loop
+      forwardTween.chain(backwardTween);
+      backwardTween.chain(forwardTween);
+  
+      // Inicia a animação
+      forwardTween.start();
+    } else {
+      console.error('Robot not found in the scene.');
+    }
   }
 
   switchCamera() {
@@ -100,86 +168,25 @@ export class MyGui {
       this.webgl.camera.position.set(0, 0, 5000);
       this.webgl.camera.lookAt(this.webgl.scene.position);
       this.cameraTypeText = 'Orthographic';
-      this.webgl.updateFirstPersonControls();
     } else {
-      this.webgl.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 300, 10000);
+      this.webgl.camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 300, 10000);
       this.webgl.camera.position.set(0, 0, 2000);
       this.webgl.camera.lookAt(this.webgl.scene.position);
       this.cameraTypeText = 'Perspective';
-      this.webgl.updateFirstPersonControls();
-      this.webgl.updateFlyControls();
     }
 
     // Atualizar as referências dos controles da câmera
-    this.webgl.trackballControls.object = this.webgl.camera;
-    this.webgl.orbitControls.object = this.webgl.camera;
-    this.webgl.firstPersonControls.object = this.webgl.camera;
-    this.webgl.flyControls.object = this.webgl.camera;
-  }
-
-  // Método para ativar os controles específicos
-  activateControls(type) {
-    console.log("A ativar controlos para: ", type);
-    this.deactivateAllControls();
-    switch (type) {
-      case 'trackball':
-        this.webgl.trackballControls.enabled = true;
-        this.webgl.orbitControls.enabled = false;
-        this.webgl.firstPersonControls.enabled = false;
-        this.webgl.flyControls.enabled = false;
-        break;
-      case 'orbit':
-        this.webgl.orbitControls.enabled = true;
-        this.webgl.trackballControls.enabled = false;
-        this.webgl.firstPersonControls.enabled = false;
-        this.webgl.flyControls.enabled = false;
-        break;
-      case 'firstPerson':
-        this.webgl.firstPersonControls.enabled = true;
-        this.webgl.orbitControls.enabled = false;
-        this.webgl.trackballControls.enabled = false;
-        this.webgl.flyControls.enabled = false;
-        break;
-      case 'fly':
-        this.webgl.flyControls.enabled = true;
-        this.webgl.orbitControls.enabled = false;
-        this.webgl.trackballControls.enabled = false;
-        this.webgl.firstPersonControls.enabled = false;
-        break;
+    if (this.webgl.trackballControls) {
+      this.webgl.trackballControls.object = this.webgl.camera;
+    }
+    if (this.webgl.orbitControls) {
+      this.webgl.orbitControls.object = this.webgl.camera;
+    }
+    if (this.webgl.firstPersonControls) {
+      this.webgl.firstPersonControls.object = this.webgl.camera;
+    }
+    if (this.webgl.flyControls) {
+      this.webgl.flyControls.object = this.webgl.camera;
     }
   }
-
-  // Método para desativar os controles específicos
-  deactivateControls(type) {
-    console.log("A desativar controlos para: ", type);
-    switch (type) {
-      case 'trackball':
-        this.webgl.trackballControls.enabled = false;
-        break;
-      case 'orbit':
-        this.webgl.orbitControls.enabled = false;
-        break;
-      case 'firstPerson':
-        this.webgl.firstPersonControls.enabled = false;
-        break;
-      case 'fly':
-        this.webgl.flyControls.enabled = false;
-        break;
-    }
-  }
-  deactivateAllControls() {
-    // Desativar todos os controles
-    console.log("Desativei todos os controlos");
-    this.webgl.trackballControls.enabled = false;
-    this.webgl.orbitControls.enabled = false;
-    this.webgl.firstPersonControls.enabled = false;
-    this.webgl.flyControls.enabled = false;
-
-    this.guiVars.trackballControls = false;
-    this.guiVars.orbitControls = false;
-    this.guiVars.firstPersonControls = false;
-    this.guiVars.flyControls = false;
-
-    console.log(this.guiVars)
-}
 }
