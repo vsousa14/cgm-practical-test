@@ -124,10 +124,28 @@ export class MyGui {
     const robot = this.robotInstance;
     if (robot) {
         const initialPosition = robot.position.clone();
-        const forwardEndPosition = initialPosition.clone().add(new THREE.Vector3(200, 0, 0));
-        const backwardEndPosition = initialPosition.clone().add(new THREE.Vector3(-200, 0, 0));
+        const forwardEndPosition = initialPosition.clone().add(new THREE.Vector3(1000, 0, 0)); // Mudança de 200 para 100
+        const backwardEndPosition = initialPosition.clone().add(new THREE.Vector3(-1000, 0, 0)); // Mudança de 200 para 100
 
-        const duration = 2000; // Duração total de cada ida e volta
+        const duration = 2500; // Duração total de cada ida e volta
+
+        const rotate180 = (callback) => {
+            const startRotation = robot.rotation.clone();
+            const targetRotation = new THREE.Euler(0, startRotation.y + Math.PI, 0); // Rotação de 180 graus
+            const startTime = Date.now();
+            const endTime = startTime + duration / 2; // Duração de 180 graus de rotação
+            const animateRotation = () => {
+                const now = Date.now();
+                const t = Math.min(1, (now - startTime) / (duration / 2));
+                robot.rotation.y = startRotation.y + Math.PI * t; // Calcula a rotação intermediária manualmente
+                if (now < endTime) {
+                    requestAnimationFrame(animateRotation);
+                } else {
+                    callback(); // Chama a função de callback após a rotação de 180 graus
+                }
+            };
+            animateRotation();
+        };
 
         const animateForward = () => {
             const startTime = Date.now();
@@ -140,7 +158,7 @@ export class MyGui {
                 if (now < endTime) {
                     requestAnimationFrame(animate);
                 } else {
-                    animateBackward();
+                    rotate180(animateBackward); // Aplica rotação de 180 graus e inicia movimento para trás
                 }
             };
             animate();
@@ -157,13 +175,13 @@ export class MyGui {
                 if (now < endTime) {
                     requestAnimationFrame(animate);
                 } else {
-                    animateForward();
+                    rotate180(animateForward); // Aplica rotação de 180 graus e inicia movimento para frente
                 }
             };
             animate();
         };
 
-        animateForward();
+        animateForward(); // Inicia a animação de movimento para frente
     } else {
         console.error('Robot not found in the scene.');
     }
