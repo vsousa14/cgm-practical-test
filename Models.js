@@ -200,9 +200,9 @@ export class Warehouse extends THREE.Object3D{
     this.add(shelf3);
 
     // Add robot in front of the shelves
-    const robot = new Robot(100, 200, 100); // Defina os parâmetros desejados para o robô
-    robot.position.set(0, shelfHeight / 2 + 15, shelfDepth / 2 + 350); // Posiciona na frente das estantes
-    this.add(robot);
+    this.robot = new Robot(100, 200, 100); // Defina os parâmetros desejados para o robô
+    this.robot.position.set(0, shelfHeight / 2 + 15, shelfDepth / 2 + 350); // Posiciona na frente das estantes
+    this.add(this.robot);
   }
 
   createWarehouse(width, height, depth, posX, posY, posZ) {
@@ -212,12 +212,9 @@ export class Warehouse extends THREE.Object3D{
     panel.position.set(posX, posY, posZ);
     return panel;
   }
-  moveRobot(deltaX, deltaY, deltaZ) {
-    if (this.robot) {
-      this.robot.position.x += deltaX;
-      this.robot.position.y += deltaY;
-      this.robot.position.z += deltaZ;
+
+    getRobot(){
+      return this.robot;
     }
-  }
 }
 

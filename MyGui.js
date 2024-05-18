@@ -8,7 +8,7 @@ export class MyGui {
     this.webgl = webgl;
     this.activeControl = null;
     this.cameraTypeText = '';
-
+    this.robotInstance = null;
     const gui = new GUI();
     this.setupGui(gui);
   }
@@ -111,6 +111,7 @@ export class MyGui {
     this.cleanScene();
     const warehouse = new Warehouse(2000, 150, 2000, 5);
     this.webgl.scene.add(warehouse);
+    this.robotInstance = warehouse.getRobot();
   }
 
   drawRobot() {
@@ -120,45 +121,53 @@ export class MyGui {
   }
 
   animateRobot() {
-    console.log(this.webgl.scene.children.map(child => child.name));
-    const robot = this.webgl.scene.getObjectByName('robot'); // Supondo que o robô tenha um nome na cena
+    const robot = this.robotInstance;
     if (robot) {
-      console.log("robot Existe: ", robot);
-      // Define a posição inicial do robô
-      const initialPosition = { x: robot.position.x };
-  
-      // Define a posição final para onde o robô andará para a frente
-      const forwardEndPosition = { x: robot.position.x + 200 };
-  
-      // Define a posição final para onde o robô voltará
-      const backwardEndPosition = { x: robot.position.x - 200 };
-  
-      // Cria uma animação Tween para o movimento para frente
-      const forwardTween = new TWEEN.Tween(initialPosition)
-        .to(forwardEndPosition, 2000) // Duração da animação para frente (em milissegundos)
-        .easing(TWEEN.Easing.Linear.None)
-        .onUpdate(() => {
-          robot.position.x = initialPosition.x;
-        });
-  
-      // Cria uma animação Tween para o movimento para trás
-      const backwardTween = new TWEEN.Tween(initialPosition)
-        .to(backwardEndPosition, 2000) // Duração da animação para trás (em milissegundos)
-        .easing(TWEEN.Easing.Linear.None)
-        .onUpdate(() => {
-          robot.position.x = initialPosition.x;
-        });
-  
-      // Encadeia as animações para formar um loop
-      forwardTween.chain(backwardTween);
-      backwardTween.chain(forwardTween);
-  
-      // Inicia a animação
-      forwardTween.start();
+        const initialPosition = robot.position.clone();
+        const forwardEndPosition = initialPosition.clone().add(new THREE.Vector3(200, 0, 0));
+        const backwardEndPosition = initialPosition.clone().add(new THREE.Vector3(-200, 0, 0));
+
+        const duration = 2000; // Duração total de cada ida e volta
+
+        const animateForward = () => {
+            const startTime = Date.now();
+            const endTime = startTime + duration;
+            const startPosition = robot.position.clone();
+            const animate = () => {
+                const now = Date.now();
+                const t = Math.min(1, (now - startTime) / duration);
+                robot.position.copy(startPosition.clone().lerp(forwardEndPosition, t));
+                if (now < endTime) {
+                    requestAnimationFrame(animate);
+                } else {
+                    animateBackward();
+                }
+            };
+            animate();
+        };
+
+        const animateBackward = () => {
+            const startTime = Date.now();
+            const endTime = startTime + duration;
+            const startPosition = robot.position.clone();
+            const animate = () => {
+                const now = Date.now();
+                const t = Math.min(1, (now - startTime) / duration);
+                robot.position.copy(startPosition.clone().lerp(backwardEndPosition, t));
+                if (now < endTime) {
+                    requestAnimationFrame(animate);
+                } else {
+                    animateForward();
+                }
+            };
+            animate();
+        };
+
+        animateForward();
     } else {
-      console.error('Robot not found in the scene.');
+        console.error('Robot not found in the scene.');
     }
-  }
+}
 
   switchCamera() {
     if (this.webgl.camera instanceof THREE.PerspectiveCamera) {
