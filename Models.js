@@ -136,25 +136,25 @@ export class Robot extends THREE.Object3D {
     this.add(backRightWheel);
 
     // Braço Inferior
-    const lowerArmWidth = width * 0.15;
+    const lowerArmRadiusTop = width * 0.07;
+    const lowerArmRadiusBottom = width * 0.07;
     const lowerArmHeight = height * 0.4;
-    const lowerArmDepth = depth * 0.15;
 
-    const lowerArmGeometry = new THREE.BoxGeometry(lowerArmWidth, lowerArmHeight, lowerArmDepth);
+    const lowerArmGeometry = new THREE.CylinderGeometry(lowerArmRadiusTop, lowerArmRadiusBottom, lowerArmHeight, 32);
     const lowerArmMaterial = new THREE.MeshNormalMaterial();
     const lowerArm = new THREE.Mesh(lowerArmGeometry, lowerArmMaterial);
-    lowerArm.position.set(0, height*0.6, 0); // No centro da face superior do corpo
+    lowerArm.position.set(0, height * 0.6, 0); // No centro da face superior do corpo
     lowerArm.rotation.z = -Math.PI / 6; // Rotação para o lado direito
 
     // Braço Superior
-    const upperArmWidth = width * 0.15;
+    const upperArmRadiusTop = width * 0.07;
+    const upperArmRadiusBottom = width * 0.07;
     const upperArmHeight = height * 0.4;
-    const upperArmDepth = depth * 0.15;
 
-    const upperArmGeometry = new THREE.BoxGeometry(upperArmWidth, upperArmHeight, upperArmDepth);
+    const upperArmGeometry = new THREE.CylinderGeometry(upperArmRadiusTop, upperArmRadiusBottom, upperArmHeight, 32);
     const upperArmMaterial = new THREE.MeshNormalMaterial();
     const upperArm = new THREE.Mesh(upperArmGeometry, upperArmMaterial);
-    upperArm.position.set(width*0.2, height * 0.3, 0); // Acima do braço inferior, no centro
+    upperArm.position.set(width * 0.2, height * 0.3, 0); // Acima do braço inferior, no centro
     upperArm.rotation.z = -Math.PI / 4; // Rotação para o lado direito
 
     lowerArm.add(upperArm); // Adiciona o braço superior como filho do braço inferior
@@ -162,6 +162,7 @@ export class Robot extends THREE.Object3D {
     this.add(lowerArm);
   }
 }
+
 
 export class Warehouse extends THREE.Object3D{
   constructor(width, height, depth, thickness) {
