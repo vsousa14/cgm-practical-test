@@ -17,7 +17,7 @@ export class Webgl {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x555555);
 
-    this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 300, 5000);
+    this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 300, 10000);
     this.camera.position.set(0, 0, 2000);
     this.camera.lookAt(this.scene.position);
 
