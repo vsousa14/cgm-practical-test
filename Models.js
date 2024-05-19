@@ -154,6 +154,11 @@ export class Warehouse extends THREE.Object3D{
     const floor = this.createWarehouse(width * 2, thickness, depth, 0, -height / 2 + thickness / 2, 0);
     this.add(floor);
 
+    const backWallHeight = height * 10;
+    const backWallYPosition = -height / 2 + backWallHeight / 2 + thickness / 2; 
+    const backWall = this.createWarehouse(width * 2, backWallHeight, thickness, 0, backWallYPosition, -depth / 2 + thickness / 2);
+    this.add(backWall);
+
     const shelfWidth = 200;
     const shelfHeight = 150;
     const shelfDepth = 200;

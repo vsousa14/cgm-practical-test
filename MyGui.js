@@ -151,21 +151,21 @@ export class MyGui {
     this.webgl.scene.add(ambientLight); 
 
     const spotLight1 = new THREE.SpotLight(0xffffff, 0.8); 
-    spotLight1.position.set(2000, 1800, -900); 
+    spotLight1.position.set(2000, 2000, -800); 
     spotLight1.castShadow = true; 
-    spotLight1.target.position.set(900, -1750, -1550); 
+    spotLight1.target.position.set(900, -1750, -900); 
     this.webgl.scene.add(spotLight1);
     this.webgl.scene.add(spotLight1.target);
 
     const spotLight2 = new THREE.SpotLight(0xffffff, 0.8); 
-    spotLight2.position.set(0, 1800, -1550); 
+    spotLight2.position.set(0, 2000, -800); 
     spotLight2.castShadow = true; 
     spotLight2.target.position.set(0, -1750, -900); 
     this.webgl.scene.add(spotLight2);
     this.webgl.scene.add(spotLight2.target);
 
     const spotLight3 = new THREE.SpotLight(0xffffff, 0.8); 
-    spotLight3.position.set(-2000, 1800, -1550); 
+    spotLight3.position.set(-2000, 2000, -800); 
     spotLight3.castShadow = true; 
     spotLight3.target.position.set(-900, -1750, -900); 
     this.webgl.scene.add(spotLight3);
