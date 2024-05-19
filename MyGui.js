@@ -75,7 +75,8 @@ export class MyGui {
     gui.add(guiVars, 'drawWarehouse').name('Draw Warehouse');
     gui.add(guiVars, 'drawRobot').name('Draw Robot');
     gui.add(guiVars, 'animateRobot').name('Animate Robot');
-    gui.add(guiVars, 'cleanScene').name('Clean Scene');
+    const cleanSceneButton = gui.add(guiVars, 'cleanScene').name('Clean Scene');
+    cleanSceneButton.domElement.classList.add('clean-scene-button');
     gui.add(guiVars, 'switchCamera').name('Switch Camera');
     gui.add(this, 'cameraTypeText').name('Camera Type').listen();
   }
@@ -98,6 +99,23 @@ export class MyGui {
     const box = new Box(600, 500, 600, 30);
     this.webgl.scene.add(box);
     this.webgl.scene.add(new THREE.AxesHelper(50));
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(0, 1000, 0); 
+    directionalLight.castShadow = true; 
+    this.webgl.scene.add(directionalLight);
+
+    directionalLight.shadow.mapSize.width = 2048; 
+    directionalLight.shadow.mapSize.height = 2048; 
+    directionalLight.shadow.camera.near = 0.5; 
+    directionalLight.shadow.camera.far = 5000; 
+
+    box.castShadow = true;
+    box.receiveShadow = true;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); 
+    this.webgl.scene.add(ambientLight);
   }
 
   drawEstante() {
@@ -105,6 +123,19 @@ export class MyGui {
     const estante = new Shelf(200, 150, 200, 5);
     this.webgl.scene.add(estante);
     this.webgl.scene.add(new THREE.AxesHelper(50));
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); 
+    directionalLight.position.set(0, 1000, 0); 
+    directionalLight.castShadow = true; 
+    this.webgl.scene.add(directionalLight);
+
+    directionalLight.shadow.mapSize.width = 2048; 
+    directionalLight.shadow.mapSize.height = 2048; 
+    directionalLight.shadow.camera.near = 0.5; 
+    directionalLight.shadow.camera.far = 5000; 
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); 
+    this.webgl.scene.add(ambientLight);
   }
 
   drawWarehouse() {
@@ -112,36 +143,89 @@ export class MyGui {
     const warehouse = new Warehouse(2000, 150, 2000, 5);
     this.webgl.scene.add(warehouse);
     this.robotInstance = warehouse.getRobot();
+
+    warehouse.receiveShadow = true;
+    warehouse.castShadow = true;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2); 
+    this.webgl.scene.add(ambientLight); 
+
+    const spotLight1 = new THREE.SpotLight(0xffffff, 0.8); 
+    spotLight1.position.set(2000, 1800, -900); 
+    spotLight1.castShadow = true; 
+    spotLight1.target.position.set(900, -1750, -1550); 
+    this.webgl.scene.add(spotLight1);
+    this.webgl.scene.add(spotLight1.target);
+
+    const spotLight2 = new THREE.SpotLight(0xffffff, 0.8); 
+    spotLight2.position.set(0, 1800, -1550); 
+    spotLight2.castShadow = true; 
+    spotLight2.target.position.set(0, -1750, -900); 
+    this.webgl.scene.add(spotLight2);
+    this.webgl.scene.add(spotLight2.target);
+
+    const spotLight3 = new THREE.SpotLight(0xffffff, 0.8); 
+    spotLight3.position.set(-2000, 1800, -1550); 
+    spotLight3.castShadow = true; 
+    spotLight3.target.position.set(-900, -1750, -900); 
+    this.webgl.scene.add(spotLight3);
+    this.webgl.scene.add(spotLight3.target);
+
+    [spotLight1, spotLight2, spotLight3].forEach(light => {
+      light.angle = Math.PI / 10; 
+      light.penumbra = 0.1; 
+      light.decay = 2; 
+      light.distance = 5000;
+
+      light.shadow.mapSize.width = 2048;
+      light.shadow.mapSize.height = 2048;
+      light.shadow.camera.near = 0.5;
+      light.shadow.camera.far = 5000;
+    });
+
   }
 
   drawRobot() {
     this.cleanScene();
     const robot = new Robot(200, 300, 200);
     this.webgl.scene.add(robot);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); 
+    directionalLight.position.set(0, 1000, 0); 
+    directionalLight.castShadow = true; 
+    this.webgl.scene.add(directionalLight);
+
+    directionalLight.shadow.mapSize.width = 2048; 
+    directionalLight.shadow.mapSize.height = 2048; 
+    directionalLight.shadow.camera.near = 0.5; 
+    directionalLight.shadow.camera.far = 5000; 
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); 
+    this.webgl.scene.add(ambientLight);
   }
 
   animateRobot() {
     const robot = this.robotInstance;
     if (robot) {
         const initialPosition = robot.position.clone();
-        const forwardEndPosition = initialPosition.clone().add(new THREE.Vector3(1000, 0, 0)); // Mudança de 200 para 100
-        const backwardEndPosition = initialPosition.clone().add(new THREE.Vector3(-1000, 0, 0)); // Mudança de 200 para 100
+        const forwardEndPosition = initialPosition.clone().add(new THREE.Vector3(1000, 0, 0)); 
+        const backwardEndPosition = initialPosition.clone().add(new THREE.Vector3(-1000, 0, 0)); 
 
-        const duration = 2500; // Duração total de cada ida e volta
+        const duration = 2500; 
 
         const rotate180 = (callback) => {
             const startRotation = robot.rotation.clone();
-            const targetRotation = new THREE.Euler(0, startRotation.y + Math.PI, 0); // Rotação de 180 graus
+            const targetRotation = new THREE.Euler(0, startRotation.y + Math.PI, 0); 
             const startTime = Date.now();
-            const endTime = startTime + duration / 2; // Duração de 180 graus de rotação
+            const endTime = startTime + duration / 2; 
             const animateRotation = () => {
                 const now = Date.now();
                 const t = Math.min(1, (now - startTime) / (duration / 2));
-                robot.rotation.y = startRotation.y + Math.PI * t; // Calcula a rotação intermediária manualmente
+                robot.rotation.y = startRotation.y + Math.PI * t; 
                 if (now < endTime) {
                     requestAnimationFrame(animateRotation);
                 } else {
-                    callback(); // Chama a função de callback após a rotação de 180 graus
+                    callback(); 
                 }
             };
             animateRotation();
@@ -158,7 +242,7 @@ export class MyGui {
                 if (now < endTime) {
                     requestAnimationFrame(animate);
                 } else {
-                    rotate180(animateBackward); // Aplica rotação de 180 graus e inicia movimento para trás
+                    rotate180(animateBackward); 
                 }
             };
             animate();
@@ -175,13 +259,13 @@ export class MyGui {
                 if (now < endTime) {
                     requestAnimationFrame(animate);
                 } else {
-                    rotate180(animateForward); // Aplica rotação de 180 graus e inicia movimento para frente
+                    rotate180(animateForward); 
                 }
             };
             animate();
         };
 
-        animateForward(); // Inicia a animação de movimento para frente
+        animateForward();
     } else {
         console.error('Robot not found in the scene.');
     }
@@ -202,7 +286,6 @@ export class MyGui {
       this.cameraTypeText = 'Perspective';
     }
 
-    // Atualizar as referências dos controles da câmera
     if (this.webgl.trackballControls) {
       this.webgl.trackballControls.object = this.webgl.camera;
     }
