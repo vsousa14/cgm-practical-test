@@ -183,9 +183,6 @@ export class Warehouse extends THREE.Object3D{
     this.add(shelf2);
     this.add(shelf3);
 
-    this.robot = new Robot(100, 200, 100);
-    this.robot.position.set(0, shelfHeight / 2 + 15, shelfDepth / 2);
-    this.add(this.robot);
   }
 
   createWarehouse(width, height, depth, posX, posY, posZ) {
@@ -196,8 +193,5 @@ export class Warehouse extends THREE.Object3D{
     return panel;
   }
 
-    getRobot(){
-      return this.robot;
-    }
 }
 

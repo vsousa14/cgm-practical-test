@@ -9,6 +9,9 @@ export class MyGui {
     this.activeControl = null;
     this.cameraTypeText = '';
     this.robotInstance = null;
+    this.isAnimationPlaying = false;
+    this.currentDirection = 'forward'; 
+    this.duration = 2500;
     const gui = new GUI();
     this.setupGui(gui);
   }
@@ -74,7 +77,7 @@ export class MyGui {
     gui.add(guiVars, 'drawEstante').name('Draw Estante');
     gui.add(guiVars, 'drawWarehouse').name('Draw Warehouse');
     gui.add(guiVars, 'drawRobot').name('Draw Robot');
-    gui.add(guiVars, 'animateRobot').name('Animate Robot');
+    gui.add(guiVars, 'animateRobot').name('Animate Robot').listen();
     const cleanSceneButton = gui.add(guiVars, 'cleanScene').name('Clean Scene');
     cleanSceneButton.domElement.classList.add('clean-scene-button');
     gui.add(guiVars, 'switchCamera').name('Switch Camera');
@@ -142,7 +145,7 @@ export class MyGui {
     this.cleanScene();
     const warehouse = new Warehouse(2000, 150, 2000, 5);
     this.webgl.scene.add(warehouse);
-    this.robotInstance = warehouse.getRobot();
+    //this.robotInstance = warehouse.getRobot();
 
     warehouse.receiveShadow = true;
     warehouse.castShadow = true;
@@ -186,90 +189,123 @@ export class MyGui {
   }
 
   drawRobot() {
-    this.cleanScene();
-    const robot = new Robot(200, 300, 200);
+    //this.cleanScene();
+    const robot = new Robot(150, 200, 150);
     this.webgl.scene.add(robot);
+    robot.position.set(0,120,0);
+    this.robotInstance = robot;
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); 
-    directionalLight.position.set(0, 1000, 0); 
-    directionalLight.castShadow = true; 
-    this.webgl.scene.add(directionalLight);
+    // const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); 
+    // directionalLight.position.set(0, 1000, 0); 
+    // directionalLight.castShadow = true; 
+    // this.webgl.scene.add(directionalLight);
 
-    directionalLight.shadow.mapSize.width = 2048; 
-    directionalLight.shadow.mapSize.height = 2048; 
-    directionalLight.shadow.camera.near = 0.5; 
-    directionalLight.shadow.camera.far = 5000; 
+    // directionalLight.shadow.mapSize.width = 2048; 
+    // directionalLight.shadow.mapSize.height = 2048; 
+    // directionalLight.shadow.camera.near = 0.5; 
+    // directionalLight.shadow.camera.far = 5000; 
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); 
-    this.webgl.scene.add(ambientLight);
+    // const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); 
+    // this.webgl.scene.add(ambientLight);
   }
 
   animateRobot() {
-    const robot = this.robotInstance;
-    if (robot) {
-        const initialPosition = robot.position.clone();
-        const forwardEndPosition = initialPosition.clone().add(new THREE.Vector3(1000, 0, 0)); 
-        const backwardEndPosition = initialPosition.clone().add(new THREE.Vector3(-1000, 0, 0)); 
-
-        const duration = 2500; 
-
-        const rotate180 = (callback) => {
-            const startRotation = robot.rotation.clone();
-            const targetRotation = new THREE.Euler(0, startRotation.y + Math.PI, 0); 
-            const startTime = Date.now();
-            const endTime = startTime + duration / 2; 
-            const animateRotation = () => {
-                const now = Date.now();
-                const t = Math.min(1, (now - startTime) / (duration / 2));
-                robot.rotation.y = startRotation.y + Math.PI * t; 
-                if (now < endTime) {
-                    requestAnimationFrame(animateRotation);
-                } else {
-                    callback(); 
-                }
-            };
-            animateRotation();
-        };
-
-        const animateForward = () => {
-            const startTime = Date.now();
-            const endTime = startTime + duration;
-            const startPosition = robot.position.clone();
-            const animate = () => {
-                const now = Date.now();
-                const t = Math.min(1, (now - startTime) / duration);
-                robot.position.copy(startPosition.clone().lerp(forwardEndPosition, t));
-                if (now < endTime) {
-                    requestAnimationFrame(animate);
-                } else {
-                    rotate180(animateBackward); 
-                }
-            };
-            animate();
-        };
-
-        const animateBackward = () => {
-            const startTime = Date.now();
-            const endTime = startTime + duration;
-            const startPosition = robot.position.clone();
-            const animate = () => {
-                const now = Date.now();
-                const t = Math.min(1, (now - startTime) / duration);
-                robot.position.copy(startPosition.clone().lerp(backwardEndPosition, t));
-                if (now < endTime) {
-                    requestAnimationFrame(animate);
-                } else {
-                    rotate180(animateForward); 
-                }
-            };
-            animate();
-        };
-
-        animateForward();
-    } else {
+    if (!this.robotInstance) {
         console.error('Robot not found in the scene.');
+        return;
+    }
+
+    if (this.isAnimationPlaying) {
+        this.isAnimationPlaying = false;
+        console.log('Animation paused');
+        return;
+    }
+
+    this.isAnimationPlaying = true;
+    console.log('Animation started');
+
+    // Continue the animation based on the current direction
+    if (this.currentDirection === 'forward') {
+        this.animateForward();
+    } else {
+        this.animateBackward();
     }
 }
+
+
+startAnimationLoop() {
+
+  // Start the initial animation based on the current direction
+  if (this.currentDirection === 'forward') {
+      this.animateForward();
+  } else {
+      this.animateBackward();
+  }
+}
+
+ rotate180 = (callback) => {
+  const robot = this.robotInstance;
+  const startRotation = robot.rotation.clone();
+  const targetRotation = new THREE.Euler(0, startRotation.y + Math.PI, 0); 
+  const startTime = Date.now();
+  const endTime = startTime + this.duration / 2; 
+  const animateRotation = () => {
+      if (!this.isAnimationPlaying) return;
+      const now = Date.now();
+      const t = Math.min(1, (now - startTime) / (this.duration / 2));
+      robot.rotation.y = startRotation.y + Math.PI * t; 
+      if (now < endTime) {
+          requestAnimationFrame(animateRotation);
+      } else {
+          callback(); 
+      }
+  };
+  animateRotation();
+};
+
+animateForward = () => {
+  const robot = this.robotInstance;
+  const startTime = Date.now();
+  const endTime = startTime + this.duration;
+  const startPosition = robot.position.clone();
+  const initialPosition = robot.position.clone();
+  const forwardEndPosition = initialPosition.clone().add(new THREE.Vector3(1000, 0, 0)); 
+  const animate = () => {
+      if (!this.isAnimationPlaying) return;
+      const now = Date.now();
+      const t = Math.min(1, (now - startTime) / this.duration);
+      robot.position.copy(startPosition.clone().lerp(forwardEndPosition, t));
+      if (now < endTime) {
+          requestAnimationFrame(animate);
+      } else {
+          this.currentDirection = 'backward'; // Update the direction
+          this.rotate180(this.animateBackward); 
+      }
+  };
+  animate();
+};
+
+animateBackward = () => {
+  const robot = this.robotInstance;
+  const startTime = Date.now();
+  const endTime = startTime + this.duration;
+  const startPosition = robot.position.clone();
+  const initialPosition = robot.position.clone();
+  const backwardEndPosition = initialPosition.clone().add(new THREE.Vector3(-1000, 0, 0)); 
+  const animate = () => {
+      if (!this.isAnimationPlaying) return;
+      const now = Date.now();
+      const t = Math.min(1, (now - startTime) / this.duration);
+      robot.position.copy(startPosition.clone().lerp(backwardEndPosition, t));
+      if (now < endTime) {
+          requestAnimationFrame(animate);
+      } else {
+          this.currentDirection = 'forward'; // Update the direction
+          this.rotate180(this.animateForward); 
+      }
+  };
+  animate();
+};
 
   switchCamera() {
     if (this.webgl.camera instanceof THREE.PerspectiveCamera) {
