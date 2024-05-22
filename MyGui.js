@@ -191,10 +191,14 @@ export class MyGui {
 
   drawRobot() {
     //this.cleanScene();
-    const robot = new Robot(150, 200, 150);
-    this.webgl.scene.add(robot);
-    robot.position.set(0,120,0);
-    this.robotInstance = robot;
+    if(this.robotInstance == null){
+      const robot = new Robot(150, 200, 150);
+      this.webgl.scene.add(robot);
+      robot.position.set(0,120,0);
+      this.robotInstance = robot;
+    }else{
+      alert("Robot already in the scene");
+    }
 
     // const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); 
     // directionalLight.position.set(0, 1000, 0); 
