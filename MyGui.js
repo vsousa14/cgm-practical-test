@@ -10,7 +10,8 @@ export class MyGui {
     this.cameraTypeText = '';
     this.robotInstance = null;
     this.isAnimationPlaying = false;
-    this.currentDirection = 'forward'; 
+    this.currentDirection = 'forward';
+    this.isRotating = false;
     this.duration = 2500;
     const gui = new GUI();
     this.setupGui(gui);
@@ -211,57 +212,60 @@ export class MyGui {
 
   animateRobot() {
     if (!this.robotInstance) {
-        console.error('Robot not found in the scene.');
-        return;
+      console.error('Robot not found in the scene.');
+      return;
     }
-
+  
     if (this.isAnimationPlaying) {
-        this.isAnimationPlaying = false;
-        console.log('Animation paused');
-        return;
+      this.isAnimationPlaying = false;
+      console.log('Animation paused');
+      
+      // Verifica se o robô está atualmente em processo de rotação
+      if (this.isRotating) {
+        this.isRotating = false;
+        if(this.currentDirection == 'forward'){
+          this.robotInstance.rotation.y = 0; // Resetar a rotação
+        }else{
+          this.robotInstance.rotation.y = Math.PI; // Resetar a rotação
+        }
+        
+      }
+      
+      return;
     }
-
+  
     this.isAnimationPlaying = true;
     console.log('Animation started');
-
-    // Continue the animation based on the current direction
+  
+    // Continue a animação com base na direção atual
     if (this.currentDirection === 'forward') {
-        this.animateForward();
-    } else {
-        this.animateBackward();
-    }
-}
-
-
-startAnimationLoop() {
-
-  // Start the initial animation based on the current direction
-  if (this.currentDirection === 'forward') {
       this.animateForward();
-  } else {
+    } else {
       this.animateBackward();
+    }
   }
-}
-
- rotate180 = (callback) => {
-  const robot = this.robotInstance;
-  const startRotation = robot.rotation.clone();
-  const targetRotation = new THREE.Euler(0, startRotation.y + Math.PI, 0); 
-  const startTime = Date.now();
-  const endTime = startTime + this.duration / 2; 
-  const animateRotation = () => {
+  
+  rotate180 = (callback) => {
+    const robot = this.robotInstance;
+    const startRotation = robot.rotation.clone();
+    const targetRotation = new THREE.Euler(0, startRotation.y + Math.PI, 0); 
+    const startTime = Date.now();
+    const endTime = startTime + this.duration / 2; 
+    const animateRotation = () => {
       if (!this.isAnimationPlaying) return;
+      this.isRotating = true; // Marcar que o robô está em processo de rotação
       const now = Date.now();
       const t = Math.min(1, (now - startTime) / (this.duration / 2));
       robot.rotation.y = startRotation.y + Math.PI * t; 
       if (now < endTime) {
-          requestAnimationFrame(animateRotation);
+        requestAnimationFrame(animateRotation);
       } else {
-          callback(); 
+        this.isRotating = false; // Resetar a marcação de rotação ao finalizar
+        callback(); 
       }
+    };
+    animateRotation();
   };
-  animateRotation();
-};
 
 animateForward = () => {
   const robot = this.robotInstance;
