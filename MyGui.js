@@ -150,7 +150,6 @@ export class MyGui {
     const warehouse = new Warehouse(2000, 150, 2000, 5);
     warehouse.name = "Warehouse";
     this.webgl.scene.add(warehouse);
-    //this.robotInstance = warehouse.getRobot();
 
     warehouse.receiveShadow = true;
     warehouse.castShadow = true;
@@ -234,13 +233,12 @@ export class MyGui {
       this.isAnimationPlaying = false;
       console.log('Animation paused');
       
-      // Verifica se o robô está atualmente em processo de rotação
       if (this.isRotating) {
         this.isRotating = false;
         if(this.currentDirection == 'forward'){
-          this.robotInstance.rotation.y = 0; // Resetar a rotação
+          this.robotInstance.rotation.y = 0;
         }else{
-          this.robotInstance.rotation.y = Math.PI; // Resetar a rotação
+          this.robotInstance.rotation.y = Math.PI; 
         }
         
       }
@@ -251,7 +249,6 @@ export class MyGui {
     this.isAnimationPlaying = true;
     console.log('Animation started');
   
-    // Continue a animação com base na direção atual
     if (this.currentDirection === 'forward') {
       this.animateForward();
     } else {
@@ -267,14 +264,14 @@ export class MyGui {
     const endTime = startTime + this.duration / 2; 
     const animateRotation = () => {
       if (!this.isAnimationPlaying) return;
-      this.isRotating = true; // Marcar que o robô está em processo de rotação
+      this.isRotating = true;
       const now = Date.now();
       const t = Math.min(1, (now - startTime) / (this.duration / 2));
       robot.rotation.y = startRotation.y + Math.PI * t; 
       if (now < endTime) {
         requestAnimationFrame(animateRotation);
       } else {
-        this.isRotating = false; // Resetar a marcação de rotação ao finalizar
+        this.isRotating = false; 
         callback(); 
       }
     };
@@ -336,8 +333,6 @@ animateBackward = () => {
   switchCamera() {
     if (this.webgl.camera instanceof THREE.PerspectiveCamera) {
       this.webgl.camera = new THREE.OrthographicCamera(-300, 500, 400, -400, 0.1, 10000);
-      const aspect = window.innerWidth / window.innerHeight;
-      const frustumSize = 1000;
       this.webgl.camera.position.set(0, 0, 5000);
       this.webgl.camera.lookAt(this.webgl.scene.position);
       this.cameraTypeText = 'Orthographic';
@@ -360,14 +355,6 @@ animateBackward = () => {
     if (this.webgl.flyControls) {
       this.webgl.flyControls.object = this.webgl.camera;
     }
-    function findObjectByName(name, scene) {
-  for (let i = 0; i < scene.children.length; i++) {
-    if (scene.children[i].name === name) {
-      return scene.children[i];
-    }
-  }
-  return null;
-}
   }
   
 }
