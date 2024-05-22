@@ -271,16 +271,20 @@ animateForward = () => {
   const initialPosition = robot.position.clone();
   const forwardEndPosition = initialPosition.clone().add(new THREE.Vector3(1000, 0, 0)); 
   const animate = () => {
-      if (!this.isAnimationPlaying) return;
-      const now = Date.now();
-      const t = Math.min(1, (now - startTime) / this.duration);
-      robot.position.copy(startPosition.clone().lerp(forwardEndPosition, t));
-      if (now < endTime) {
-          requestAnimationFrame(animate);
+    if (!this.isAnimationPlaying) return;
+    const now = Date.now();
+    const t = Math.min(1, (now - startTime) / this.duration);
+    robot.position.copy(startPosition.clone().lerp(forwardEndPosition, t));
+    if (now < endTime) {
+      requestAnimationFrame(animate);
+    } else {
+      if (robot.position.x >= 1000) {
+        this.currentDirection = 'backward'; // Update the direction
+        this.rotate180(this.animateBackward); 
       } else {
-          this.currentDirection = 'backward'; // Update the direction
-          this.rotate180(this.animateBackward); 
+        requestAnimationFrame(this.animateForward);
       }
+    }
   };
   animate();
 };
@@ -293,16 +297,20 @@ animateBackward = () => {
   const initialPosition = robot.position.clone();
   const backwardEndPosition = initialPosition.clone().add(new THREE.Vector3(-1000, 0, 0)); 
   const animate = () => {
-      if (!this.isAnimationPlaying) return;
-      const now = Date.now();
-      const t = Math.min(1, (now - startTime) / this.duration);
-      robot.position.copy(startPosition.clone().lerp(backwardEndPosition, t));
-      if (now < endTime) {
-          requestAnimationFrame(animate);
+    if (!this.isAnimationPlaying) return;
+    const now = Date.now();
+    const t = Math.min(1, (now - startTime) / this.duration);
+    robot.position.copy(startPosition.clone().lerp(backwardEndPosition, t));
+    if (now < endTime) {
+      requestAnimationFrame(animate);
+    } else {
+      if (robot.position.x <= -1000) {
+        this.currentDirection = 'forward'; // Update the direction
+        this.rotate180(this.animateForward); 
       } else {
-          this.currentDirection = 'forward'; // Update the direction
-          this.rotate180(this.animateForward); 
+        requestAnimationFrame(this.animateBackward);
       }
+    }
   };
   animate();
 };
