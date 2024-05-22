@@ -99,6 +99,7 @@ export class MyGui {
   }
 
   drawBox() {
+    this.robotInstance = null;
     this.cleanScene();
     const box = new Box(600, 500, 600, 30);
     this.webgl.scene.add(box);
@@ -123,6 +124,7 @@ export class MyGui {
   }
 
   drawEstante() {
+    this.robotInstance = null;
     this.cleanScene();
     const estante = new Shelf(200, 150, 200, 5);
     this.webgl.scene.add(estante);
@@ -143,8 +145,10 @@ export class MyGui {
   }
 
   drawWarehouse() {
+    this.robotInstance = null;
     this.cleanScene();
     const warehouse = new Warehouse(2000, 150, 2000, 5);
+    warehouse.name = "Warehouse";
     this.webgl.scene.add(warehouse);
     //this.robotInstance = warehouse.getRobot();
 
@@ -188,7 +192,7 @@ export class MyGui {
     });
 
   }
-
+  
   drawRobot() {
     //this.cleanScene();
     if(this.robotInstance == null){
@@ -200,18 +204,24 @@ export class MyGui {
       alert("Robot already in the scene");
     }
 
-    // const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); 
-    // directionalLight.position.set(0, 1000, 0); 
-    // directionalLight.castShadow = true; 
-    // this.webgl.scene.add(directionalLight);
+    console.log(this.webgl.scene.children);
+    const warehouseObject = this.webgl.scene.children.find(child => child.name === 'Warehouse');
 
-    // directionalLight.shadow.mapSize.width = 2048; 
-    // directionalLight.shadow.mapSize.height = 2048; 
-    // directionalLight.shadow.camera.near = 0.5; 
-    // directionalLight.shadow.camera.far = 5000; 
+    if (!warehouseObject) {
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); 
+     directionalLight.position.set(0, 1000, 0); 
+     directionalLight.castShadow = true; 
+     this.webgl.scene.add(directionalLight);
 
-    // const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); 
-    // this.webgl.scene.add(ambientLight);
+     directionalLight.shadow.mapSize.width = 2048; 
+     directionalLight.shadow.mapSize.height = 2048; 
+     directionalLight.shadow.camera.near = 0.5; 
+     directionalLight.shadow.camera.far = 5000; 
+
+     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); 
+     this.webgl.scene.add(ambientLight);
+    } 
+    
   }
 
   animateRobot() {
@@ -350,5 +360,14 @@ animateBackward = () => {
     if (this.webgl.flyControls) {
       this.webgl.flyControls.object = this.webgl.camera;
     }
+    function findObjectByName(name, scene) {
+  for (let i = 0; i < scene.children.length; i++) {
+    if (scene.children[i].name === name) {
+      return scene.children[i];
+    }
   }
+  return null;
+}
+  }
+  
 }
