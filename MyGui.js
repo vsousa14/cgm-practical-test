@@ -1,4 +1,3 @@
-// MyGui.js
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { Box, Shelf, Warehouse, Robot } from './Models.js';
 import * as THREE from 'three';
