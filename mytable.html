@@ -1,47 +1,44 @@
 <!DOCTYPE html>
-
 <html>
-
 <head>
     <meta charset="UTF-8" />
     <title>MyFactory</title>
-    <!-- https://threejs.org/manual/#en/responsive -->
     <style>
-        body {
-            margin: 0;
-            height: 100%;
-        }
-        #WebGL-canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-        .title{
-          background:#2e17ff!important;
-        }
-        .lil-gui{
-          background-color:#140c60;
-          opacity: .6;
-        }
+      body {
+          margin: 0;
+          height: 100%;
+      }
+      #WebGL-canvas {
+          width: 100%;
+          height: 100%;
+          display: block;
+      }
+      .title{
+        background:#2e17ff!important;
+      }
+      .lil-gui{
+        background-color:#140c60;
+        opacity: .6;
+      }
 
-        .lil-gui button, .lil-gui input{
-          background-color: #33298f;
-        }
+      .lil-gui button, .lil-gui input{
+        background-color: #33298f;
+      }
 
-        .lil-gui button:hover{
-          background-color: #4e3edc;
-        }
+      .lil-gui button:hover{
+        background-color: #4e3edc;
+      }
 
-        .clean-scene-button {
-          border-top: solid 2px #ff0000 !important; 
-          border-bottom: solid 2px #ff0000 !important; 
-        }
+      .clean-scene-button {
+        border-top: solid 2px #ff0000 !important; 
+        border-bottom: solid 2px #ff0000 !important; 
+      }
 
 /* Para adicionar efeito de hover */
 .clean-scene-button:hover {
-    background-color: #cc0000 !important; /* Cor de fundo mais escura ao passar o mouse */
+  background-color: #cc0000 !important; /* Cor de fundo mais escura ao passar o mouse */
 }
-    </style>
+  </style>
     <script type="importmap">
     {
       "imports": {
@@ -55,20 +52,18 @@
 
 <!-- Canvas for Webgl Output -->
 <canvas id="WebGL-canvas"></canvas>
+<div id="GUI-output"></div> <!-- Added this line -->
 <div id="visual-console" style="position: absolute; top: 0; left: 0; color: white; background: rgba(0, 0, 0, 0.5); padding: 10px; max-height: 100px; overflow: auto;">
-  <!-- Mensagens da consola serão inseridas aqui -->
+  <!-- Mensagens da consola serÃ£o inseridas aqui -->
 </div>
 
 <script type="module">
-
   'use strict';
-
   import { Webgl } from './WebGl.js';
   import { MyGui } from './MyGui.js';
 
   const webgl = new Webgl();
   const mygui = new MyGui(webgl);
-  
 
   render();
 
@@ -76,7 +71,6 @@
     requestAnimationFrame(render);
     webgl.render();
   }
-
 </script>
 </body>
 </html>

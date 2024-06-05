@@ -1,197 +1,147 @@
 import * as THREE from 'three';
+import * as SceneUtils from 'three/addons/utils/SceneUtils.js';
+
+// Carregador de texturas
+const textureLoader = new THREE.TextureLoader();
+
+// Carregamento assíncrono das texturas
+const loadTexture = (url) => {
+  return new Promise((resolve, reject) => {
+    textureLoader.load(url, (texture) => {
+      resolve(texture);
+    }, undefined, (err) => {
+      reject(err);
+    });
+  });
+};
+
+const cardboardPromise = loadTexture('Texturas/cartao.png');
+const alternatorPromise = loadTexture('Texturas/alternador.png');
+
+// Função para criar uma textura de canvas com texto sobre uma textura existente
+function createTextTextureWithBackground(text, backgroundImage) {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  canvas.width = 512;
+  canvas.height = 512;
+
+  // Desenhar a textura de fundo
+  context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+
+  // Configurar estilo do texto
+  context.fillStyle = '#000000';
+  context.font = '48px Arial';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+
+  // Quebrar o texto em várias linhas
+  const lines = wrapText(context, text, canvas.width - 20); 
+
+  // Desenhar as linhas de texto
+  const lineHeight = 50; 
+  const initialY = canvas.height / 2 - (lines.length / 2) * lineHeight; // Centralizar verticalmente
+  lines.forEach((line, i) => {
+    context.fillText(line, canvas.width / 2, initialY + i * lineHeight);
+  });
+
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
+}
+
+// Função para quebrar o texto em várias linhas
+function wrapText(context, text, maxWidth) {
+  const words = text.split(' ');
+  let lines = [];
+  let currentLine = words[0];
+
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i];
+    const width = context.measureText(currentLine + ' ' + word).width;
+    if (width < maxWidth) {
+      currentLine += ' ' + word;
+    } else {
+      lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  lines.push(currentLine);
+  return lines;
+}
 
 export class Box extends THREE.Object3D {
-  constructor(width, height, depth, thickness) {
+  constructor(largura, altura, comprimento, espessura, cardboard, alternator) {
     super();
 
-    const bottom = this.createPanel(width, thickness, depth, 0, -height / 2 + thickness / 2, 0);
-    this.add(bottom);
+    this.lado = Box.createMesh(new THREE.BoxGeometry(largura, altura, espessura, 16, 16, 16), cardboard);
+    this.lado.position.set(0, altura / 2, comprimento / 2 + espessura / 2);
+    this.add(this.lado);
 
-    const front = this.createPanel(width, height, thickness, 0, 0, -depth / 2 + thickness / 2);
-    const back = this.createPanel(width, height, thickness, 0, 0, depth / 2 - thickness / 2);
-    const left = this.createPanel(thickness, height, depth - thickness * 2, -width / 2 + thickness / 2, 0, 0);
-    const right = this.createPanel(thickness, height, depth - thickness * 2, width / 2 - thickness / 2, 0, 0);
+    this.lado1 = Box.createMesh(new THREE.BoxGeometry(largura, altura, espessura, 16, 16, 16), cardboard);
+    this.lado1.position.set(0, altura / 2, -(comprimento / 2 + espessura / 2));
+    this.add(this.lado1);
 
-    this.add(front);
-    this.add(back);
-    this.add(left);
-    this.add(right);
+    this.lado2 = Box.createMesh(new THREE.BoxGeometry(espessura, altura, comprimento + espessura * 2, 16, 16, 16), cardboard);
+    this.lado2.position.set(-(largura / 2 + espessura / 2), altura / 2, 0);
+    this.add(this.lado2);
+
+    this.lado3 = Box.createMesh(new THREE.BoxGeometry(espessura, altura, comprimento + espessura * 2, 16, 16, 16), cardboard);
+    this.lado3.position.set(largura / 2 + espessura / 2, altura / 2, 0);
+    this.add(this.lado3);
+
+    this.lado4 = Box.createMesh(new THREE.BoxGeometry(largura, 0, comprimento, 16, 16, 16), cardboard);
+    this.lado4.position.set(0, 0, 0);
+    this.add(this.lado4);
+
+    this.cima = Box.createMesh(new THREE.BoxGeometry(largura + espessura * 2, 0, comprimento + espessura * 2, 16, 16, 16), alternator);
+    this.cima.position.set(0, altura + espessura / 10, 0);
+    this.add(this.cima);
+
+    const textTextureWithBackground = createTextTextureWithBackground('ALTERNATORS XPTO MY COMPANY INC', cardboard.image);
+    this.ladoComTexto = Box.createMesh(new THREE.BoxGeometry(espessura, altura, comprimento + espessura * 2, 16, 16, 16), textTextureWithBackground);
+    this.ladoComTexto.position.set(-(largura / 2 + espessura / 2), altura / 2, 0);
+    this.add(this.ladoComTexto);
   }
 
-  createPanel(width, height, depth, posX, posY, posZ) {
-    const geometry = new THREE.BoxGeometry(width, height, depth);
-    const material = new THREE.MeshLambertMaterial({ color: '#debd62' });
-    const panel = new THREE.Mesh(geometry, material);
-    panel.position.set(posX, posY, posZ);
-    return panel;
+  static createMesh(geom, color) {
+    const material = new THREE.MeshBasicMaterial({ map: color });
+    const mesh = new THREE.Mesh(geom, material);
+    return mesh;
   }
 }
 
-export class Shelf extends THREE.Object3D {
-  constructor(width, height, depth, thickness) {
+export const createBoxes = async () => {
+  const [cardboard, alternator] = await Promise.all([cardboardPromise, alternatorPromise]);
+
+  alternator.wrapS = THREE.RepeatWrapping;
+  alternator.wrapT = THREE.RepeatWrapping;
+  alternator.repeat.set(2, 3);
+
+  const caixa1 = new Box(24.2, 30, 28, 1, cardboard, alternator);
+  caixa1.rotation.y += Math.PI - 0.5678;
+  caixa1.translateX(0);
+  caixa1.translateZ(-97);
+
+  const caixa2 = new Box(28.2, 30, 28, 1, cardboard, alternator);
+  caixa2.rotation.y += Math.PI - 0.5678;
+  caixa2.translateX(169);
+  caixa2.translateZ(-95);
+
+  return [caixa1, caixa2];
+};
+
+export class Map extends THREE.Object3D {
+  constructor() {
     super();
 
-    const bottom = this.createShelf(width * 2, thickness, depth, 0, -height / 2 + thickness / 2, 0);
-    bottom.rotateZ(Math.PI / 20);
-    bottom.translateX(-width * (Math.PI / 6));
+    const cardboard = new THREE.TextureLoader().load('./Texturas/mapa.png');
 
-    const middle = this.createShelf(width * 2, thickness, depth, 0, -height / 2 + thickness / 2, 0);
-    middle.rotateZ(Math.PI / 20);
-    middle.translateY(height * (Math.PI / 4));
+    const geometry = new THREE.PlaneGeometry(1126, 1076);
+    const mesh = new THREE.MeshBasicMaterial({ map: cardboard });
 
-    const top = this.createShelf(width * 2, thickness, depth, 0, -height / 2 + thickness / 2, 0);
-    top.rotateZ(-Math.PI / 20);
-    top.translateX(-width / 2);
-    top.translateY(height * (Math.PI / 2));
+    const mapa = new THREE.Mesh(geometry, mesh);
+    mapa.rotation.x = -0.5 * Math.PI;
+    mapa.rotation.z = 0.7898;
 
-    this.add(bottom);
-    this.add(middle);
-    this.add(top);
-
-    this.addBoxesToShelf(bottom, width, height, depth, thickness,0, true);
-    this.addBoxesToShelf(middle, width, height, depth, thickness,  0, true);
-    this.addBoxesToShelf(top, width, height, depth, thickness, 0, false);
-  }
-
-  createShelf(width, height, depth, posX, posY, posZ) {
-    const geometry = new THREE.BoxGeometry(width, height, depth);
-    const material = new THREE.MeshLambertMaterial({ color: '#916f10' });
-    const panel = new THREE.Mesh(geometry, material);
-    panel.position.set(posX, posY, posZ);
-    return panel;
-  }
-
-  addBoxesToShelf(shelf, shelfWidth, shelfHeight, shelfDepth, shelfThickness, angle, alignLeft) {
-    const boxWidth = shelfWidth / 2;
-    const boxHeight = shelfHeight / 2;
-    const boxDepth = shelfDepth / 2;
-    const boxThickness = shelfThickness / 2;
-    const margin = 2.5;
-    
-    const box1 = new Box(boxWidth, boxHeight, boxDepth, boxThickness);
-    const box2 = new Box(boxWidth, boxHeight, boxDepth, boxThickness);
-    
-    if (alignLeft) {
-      box1.position.set(-shelfWidth / 2 + boxWidth / 2, boxHeight / 2 + boxThickness / 2, 0);
-      box2.position.set(-shelfWidth / 2 + boxWidth * 1.5 + margin, boxHeight / 2 + boxThickness / 2, 0);
-    } else {
-      box1.position.set(shelfWidth / 2 - boxWidth / 2, boxHeight / 2 + boxThickness / 2, 0);
-      box2.position.set(shelfWidth / 2 - boxWidth * 1.5 - margin, boxHeight / 2 + boxThickness / 2, 0);
-    }
-    
-    box1.rotation.z = angle;
-    box2.rotation.z = angle;
-    
-    shelf.add(box1);
-    shelf.add(box2);
-  }
-  
-}
-
-export class Robot extends THREE.Object3D {
-  constructor(width, height, depth) {
-    super();
-
-    const bodyGeometry = new THREE.BoxGeometry(width, height, depth);
-    const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    this.add(body);
-
-    const wheelRadius = Math.min(width, depth) * 0.3;
-
-    const wheelGeometry = new THREE.SphereGeometry(wheelRadius, 32, 32);
-    const wheelMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff });
-    const frontLeftWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-    const frontRightWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-    const backLeftWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-    const backRightWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-
-    const halfWidth = width / 2;
-    const halfDepth = depth / 2;
-    const wheelPosY = -height / 2 - wheelRadius;
-
-    frontLeftWheel.position.set(-halfWidth, wheelPosY, halfDepth);
-    frontRightWheel.position.set(halfWidth, wheelPosY, halfDepth);
-    backLeftWheel.position.set(-halfWidth, wheelPosY, -halfDepth);
-    backRightWheel.position.set(halfWidth, wheelPosY, -halfDepth);
-
-    this.add(frontLeftWheel);
-    this.add(frontRightWheel);
-    this.add(backLeftWheel);
-    this.add(backRightWheel);
-
-    const lowerArmRadiusTop = width * 0.07;
-    const lowerArmRadiusBottom = width * 0.07;
-    const lowerArmHeight = height * 0.4;
-
-    const lowerArmGeometry = new THREE.CylinderGeometry(lowerArmRadiusTop, lowerArmRadiusBottom, lowerArmHeight, 32);
-    const lowerArmMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-    const lowerArm = new THREE.Mesh(lowerArmGeometry, lowerArmMaterial);
-    lowerArm.position.set(0, height * 0.6, 0);
-    lowerArm.rotation.z = -Math.PI / 6;
-
-    const upperArmRadiusTop = width * 0.07;
-    const upperArmRadiusBottom = width * 0.07;
-    const upperArmHeight = height * 0.4;
-
-    const upperArmGeometry = new THREE.CylinderGeometry(upperArmRadiusTop, upperArmRadiusBottom, upperArmHeight, 32);
-    const upperArmMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-    const upperArm = new THREE.Mesh(upperArmGeometry, upperArmMaterial);
-    upperArm.position.set(width * 0.2, height * 0.3, 0); 
-    upperArm.rotation.z = -Math.PI / 4; 
-
-    lowerArm.add(upperArm);
-
-    this.add(lowerArm);
+    this.add(mapa);
   }
 }
-
-
-export class Warehouse extends THREE.Object3D{
-  constructor(width, height, depth, thickness) {
-    super();
-
-    const floor = this.createWarehouse(width * 2, thickness, depth, 0, -height / 2 + thickness / 2, 0);
-    this.add(floor);
-
-    const backWallHeight = height * 10;
-    const backWallYPosition = -height / 2 + backWallHeight / 2 + thickness / 2; 
-    const backWall = this.createWarehouse(width * 2, backWallHeight, thickness, 0, backWallYPosition, -depth / 2 + thickness / 2);
-    this.add(backWall);
-
-    const shelfWidth = 200;
-    const shelfHeight = 150;
-    const shelfDepth = 200;
-    const shelfThickness = 5;
-
-    const shelf1 = new Shelf(shelfWidth, shelfHeight, shelfDepth, shelfThickness);
-    const shelf2 = new Shelf(shelfWidth, shelfHeight, shelfDepth, shelfThickness);
-    const shelf3 = new Shelf(shelfWidth, shelfHeight, shelfDepth, shelfThickness);
-
-    const shelfSpacing = shelfWidth + 50;
-    const shelfElevation = 10;
-
-    shelf1.position.set(-shelfSpacing * 5, shelfHeight / 2 + shelfElevation, -780);
-    shelf2.position.set(0, shelfHeight / 2 + shelfElevation, -780);
-    shelf3.position.set(shelfSpacing * 5, shelfHeight / 2 + shelfElevation, -780);
-
-    shelf1.rotation.y = Math.PI / 2;
-    shelf2.rotation.y = Math.PI / 2;
-    shelf3.rotation.y = Math.PI / 2;
-
-    this.add(shelf1);
-    this.add(shelf2);
-    this.add(shelf3);
-
-  }
-
-  createWarehouse(width, height, depth, posX, posY, posZ) {
-    const geometry = new THREE.BoxGeometry(width, height, depth);
-    const material = new THREE.MeshLambertMaterial({ color: '#E6E6E6' });
-    const panel = new THREE.Mesh(geometry, material);
-    panel.position.set(posX, posY, posZ);
-    return panel;
-  }
-
-}
-
